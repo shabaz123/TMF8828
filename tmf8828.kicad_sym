@@ -81,17 +81,17 @@
 					)
 				)
 			)
-			(pin power_in line
-				(at 0 -15.24 90)
+			(pin bidirectional line
+				(at 8.89 -2.54 180)
 				(length 2.54)
-				(name "GNDV"
+				(name "GPIO1"
 					(effects
 						(font
 							(size 1.27 1.27)
 						)
 					)
 				)
-				(number "11"
+				(number "10"
 					(effects
 						(font
 							(size 1.27 1.27)
@@ -99,10 +99,10 @@
 					)
 				)
 			)
-			(pin bidirectional line
-				(at 8.89 -2.54 180)
+			(pin power_in line
+				(at 0 -15.24 90)
 				(length 2.54)
-				(name "GPIO1"
+				(name "GNDV"
 					(effects
 						(font
 							(size 1.27 1.27)
