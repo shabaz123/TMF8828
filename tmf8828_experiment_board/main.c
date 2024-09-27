@@ -197,7 +197,6 @@ int
 main(void)
 {
     int numbytes;
-    int conf[32], dist[32];
 
     stdio_init_all();
     sleep_ms(3000);
@@ -213,16 +212,40 @@ main(void)
         if (numbytes > 0) {
             process_line(uart_buffer, numbytes);
         }
-        // print 4x4
-        if (loop_tick > 99) {
+
+
+        if (loop_tick > 499) {
             loop_tick = 0;
             led_toggle();
+#ifdef MODE_4X4
+            // print 4x4
+            int conf[32], dist[32];
             if (TMF8828_update(conf, dist)) {
                 for (int i = 0; i < 32; i++) {
                     APP_PRINT("nr: %d, conf: %d, dist: %d\n", i, conf[i], dist[i]);
                 }
                 APP_PRINT("\n");
             }
+#else
+            // print 8x8
+            int obj0conf[8][8], obj0dist[8][8], obj1conf[8][8], obj1dist[8][8];
+            if (TMF8828_update8x8(obj0conf, obj0dist, obj1conf, obj1dist)) {
+                APP_PRINT("\nObject0 matrix\n");
+                for (int i = 0; i < 8; i++) {
+                    for (int j = 0; j < 8; j++) {
+                        APP_PRINT("%d, ", obj0dist[i][j]);
+                    }
+                    APP_PRINT("\n");
+                }
+                APP_PRINT("\nObject1 matrix\n");
+                for (int i = 0; i < 8; i++) {
+                    for (int j = 0; j < 8; j++) {
+                        APP_PRINT("%d, ", obj1dist[i][j]);
+                    }
+                    APP_PRINT("\n");
+                }
+            }
+#endif
         }
         sleep_ms(1);
         loop_tick++;
