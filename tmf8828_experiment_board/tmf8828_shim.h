@@ -4,12 +4,28 @@
 #define TMF8828_EXPERIMENT_BOARD_TMF8828_SHIM_H
 
 #include "pico/stdlib.h"
+#include "registers_i2c.h"
+#include "tmf8828_sensor.h"
+
+#define TMF8828_DRIVER_MAJOR_VERSION  1
+#define TMF8828_DRIVER_MINOR_VERSION  14
+
+/**  Return codes for i2c functions:
+ */
+#define I2C_SUCCESS             0       /**< successfull execution no error */
+#define I2C_ERR_DATA_TOO_LONG   -1      /**< driver cannot handle given amount of data for tx/rx */
+#define I2C_ERR_SLAVE_ADDR_NAK  -2      /**< device nak'ed slave address */
+#define I2C_ERR_DATA_NAK        -3      /**< device nak'ed written data */
+#define I2C_ERR_OTHER           -4      /**< any other error */
+#define I2C_ERR_TIMEOUT         -5      /**< timeout in waiting for slave to respond */
+
 
 #define ARDUINO_MAX_I2C_TRANSFER    32
 
-// on the arduino uno the enable pin is connected to digital 6, interrupt to digital 7
-#define ENABLE_PIN                            6
-#define INTERRUPT_PIN                         7
+// Pi Pico pin config:
+#define ENABLE_PIN                            9
+#define INTERRUPT_PIN                         6
+#define TMF_IO0_PIN                          7
 
 // for 2nd tmf8828 on the arduino uno the alternate enable pin is connected to digital 4, alternate interrupt to digital 5
 #define ALT_ENABLE_PIN                            4
@@ -32,8 +48,6 @@
 #define TMF8828_COM_HIST_DUMP__histogram__electrical_calibration_24_bit_histogram 2 // Electrical calibration 24 bit histogram
 #define TMF8828_NUMBER_OF_BINS_PER_CHANNEL                    128       // how many bins are in a raw histogram per channel
 
-// Clock correction pairs must be a power of 2 value.
-#define CLK_CORRECTION_PAIRS                4   // how many clock correction pairs are stored
 
 // some more info registers from the results page
 #define TMF8828_COM_RESULT_NUMBER         0x24
@@ -92,8 +106,10 @@
 #define PRINT_STR(str)                        APP_PRINT( str )
 #define PRINT_LN()                            APP_PRINT( "\n" )
 
-// Which character to use to seperate the entries in printing
+// Which character to use to separate the entries in printing
+// need a faulty spelling too, because the code I copied had it : (
 #define SEPERATOR                             ','
+#define SEPARATOR                             ','
 
 // for clock correction insert here the number in relation to your host
 #define HOST_TICKS_PER_US                     1         // host counts ticks every microsecond
@@ -101,20 +117,11 @@
 
 // ---------------------------------------------- types -------------------------------------------
 
-// Each tmf8828 driver instance needs a data structure like this
-typedef struct _tmf8828Driver
-{
-    uint32_t hostTicks[ CLK_CORRECTION_PAIRS ];       // host ticks for clock correction
-    uint32_t tmf8828Ticks[ CLK_CORRECTION_PAIRS ];    // device ticks for clock correction
-    uint8_t clkCorrectionIdx;                         // index of the last inserted pair
-    uint8_t i2cSlaveAddress;                          // i2c slave address to talk to device
-    uint8_t clkCorrectionEnable;                      // default is clock correction on
-    uint8_t enablePin;                                // which pin to use for enable line
-    uint8_t interruptPin;                             // which pin to use for interrupt line
-    uint8_t logLevel;                                 // how chatty the program is
-} tmf8828Driver;
+
 
 // ---------------------------------------------- functions ---------------------------------------
+
+
 
 // Function to allow to wait for some time in microseconds
 // wait ... number of microseconds to wait before this functionr returns
@@ -123,8 +130,13 @@ void delay_in_microseconds( uint32_t wait );
 // Function returns the current sys-tick.
 uint32_t get_sys_tick( );
 
+// configures the Pi Pico GPIO pins
+void configurePins(void);
 // configures the Pi Pico GPIO pins for I2C
 void i2c_setup(void);
+
+void tmf8828DisableFn(void);
+void tmf8828EnableFn(void);
 
 // I2C transmit only function.
 // reg ... the register address to write to
@@ -138,25 +150,19 @@ void i2c_tx( uint8_t slave_addr, uint8_t reg, const uint8_t * buf, uint8_t len )
 // len ... number of bytes to receive
 void i2c_rx( uint8_t slave_addr, uint8_t reg, uint8_t * buf, uint8_t len );
 
-// Function to print the results in a kind of CSV like format
-// driver ... pointer to the tmf8828 driver structure
-// data ... pointer to the result structure as defined for tmf882x
-// len ... number of bytes the pointer points to
-void print_results( tmf8828Driver * driver, uint8_t * data, uint8_t len, int *conf, int *dist, int *subcapture_nr );
 
-
-// Function to print a histogram part in a kind of CSV like format
-// driver ... pointer to the tmf8828 driver structure
-// data ... pointer to the histogram buffer as defined for tmf882x
-// len ... number of bytes the pointer points to
-void print_histogram( tmf8828Driver * driver, uint8_t * data, uint8_t len );
-
-// Correct the distance based on the clock correction pairs
-// driver ... pointer to an instance of the tmf8828 driver data structure
-uint16_t tmf8828CorrectDistance( tmf8828Driver * driver, uint16_t distance );
 
 // Convert 4 bytes in little endian format into an uint32_t
 uint32_t tmf8828GetUint32( uint8_t * data );
+
+
+int8_t i2cTxReg ( void * dptr, uint8_t slaveAddr, uint8_t regAddr, uint16_t toTx, const uint8_t * txData );
+int8_t i2cRxReg ( void * dptr, uint8_t slaveAddr, uint8_t regAddr, uint16_t toRx, uint8_t * rxData );
+int8_t i2cTxRx ( void * dptr, uint8_t slaveAddr, uint16_t toTx, const uint8_t * txData, uint16_t toRx, uint8_t * rxData );
+
+
+
+
 
 void start_timer();
 

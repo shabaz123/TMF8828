@@ -12,6 +12,19 @@ extern const unsigned long tmf8828_image_finish;
 extern const unsigned long tmf8828_image_length;
 extern const unsigned char tmf8828_image[7128];
 
+// Driver Version
+const tmf8828DriverInfo tmf8828DriverInfoReset =
+        { .version = { TMF8828_DRIVER_MAJOR_VERSION , TMF8828_DRIVER_MINOR_VERSION }
+        };
+
+const tmf8828DeviceInfo tmf8828DeviceInfoReset =
+        { .deviceSerialNumber = 0
+                , .appVersion = { 0, 0, 0, 0 }
+                , .chipVersion = { 0, 0}
+        };
+
+
+
 uint8_t dataBuffer[ DATA_BUFFER_SIZE ];           // transfer/receive buffer
 
 static void tmf8828ResetClockCorrection( tmf8828Driver * driver );
@@ -25,6 +38,20 @@ void tmf8828Initialise ( tmf8828Driver * driver, uint8_t enablePin, uint8_t inte
     driver->i2cSlaveAddress = TMF8828_SLAVE_ADDR;
     driver->clkCorrectionEnable = 1;                  // default is on
     driver->logLevel = LOG_LEVEL_ERROR;
+}
+
+// function reads complete device information from the tmf8806
+int8_t tmf8828ReadDeviceInfo ( tmf8828Driver * driver )
+{
+    driver->device = tmf8828DeviceInfoReset;
+    i2cRxReg( driver, driver->i2cSlaveAddress, TMF8828_ID, 2, driver->device.chipVersion );
+    i2cRxReg( driver, driver->i2cSlaveAddress, TMF8828_COM_APP_ID, 4, driver->device.appVersion );  // tmf8828 application has 4 verion bytes
+    if ( driver->device.appVersion[0] == TMF8828_COM_APP_ID__application )
+    {
+        i2cRxReg( driver, driver->i2cSlaveAddress, TMF8828_COM_SERIAL_NUMBER_0, 4, dataBuffer );
+        driver->device.deviceSerialNumber = tmf8828GetUint32( &(dataBuffer[0]) );
+    }
+    return APP_SUCCESS_OK;
 }
 
 // Function to overwrite the default log level
@@ -58,6 +85,112 @@ void tmf8828Reset ( tmf8828Driver * driver )
 void tmf8828Enable ( tmf8828Driver * driver )
 {
     tmf8828Initialise( driver, driver->enablePin, driver->interruptPin );           // when enable gets high, the HW resets to default slave addr
+}
+
+// function prints a single result, and returns incremented pointer
+static uint8_t * print_result ( tmf8828Driver * driver, uint8_t * data, int *conf, int *dist, int *idx )
+{
+    uint8_t confidence = data[0];               // 1st byte is confidence
+    uint16_t distance = data[2];                // 3rd byte is MSB distance
+    distance = (distance << 8);       // 2nd byte is LSB distnace
+    distance = distance + data[1];
+    distance = tmf8828CorrectDistance( driver, distance );
+    //PRINT_CHAR( SEPERATOR );
+    //PRINT_INT( distance );
+    //PRINT_CHAR( SEPERATOR );
+    //PRINT_INT( confidence );
+    int offset = 0;
+    if ((*idx) > 35) {
+        offset = 4;
+    }
+    else if ((*idx) > 26) {
+        offset = 3;
+    }
+    else if ((*idx) > 17) {
+        offset = 2;
+    }
+    else if ((*idx) > 8){
+        offset = 1;
+    }
+    conf[(*idx) - offset] = confidence;
+    dist[(*idx) - offset] = distance;
+    (*idx)++;
+    return data+3;                              // for convenience only, return the new pointer
+}
+
+// Results printing:
+// #Obj,<i2c_slave_address>,<result_number>,<temperature>,<number_valid_results>,<systick>,<distance_0_mm>,<confidence_0>,<distance_1_mm>,<distance_1>, ...
+void print_results ( tmf8828Driver * driver, uint8_t * data, uint8_t len, int *conf, int *dist, int *subcapture_nr )
+{
+    if ( len >= TMF8828_COM_CONFIG_RESULT__measurement_result_size )
+    {
+        int cnt = 0;
+        int8_t i;
+        //uint32_t sysTick = tmf8828GetUint32( data + RESULT_REG( SYS_TICK_0 ) );
+        //PRINT_STR( "#Obj" );
+        //PRINT_CHAR( SEPERATOR );
+        //PRINT_INT( driver->i2cSlaveAddress );
+        //PRINT_CHAR( SEPERATOR );
+        //PRINT_INT( data[ RESULT_REG( RESULT_NUMBER) ] );
+        (*subcapture_nr) = data[ RESULT_REG( RESULT_NUMBER) ];
+        //PRINT_CHAR( SEPERATOR );
+        //PRINT_INT( data[ RESULT_REG( TEMPERATURE )] );
+        //PRINT_CHAR( SEPERATOR );
+        //PRINT_INT( data[ RESULT_REG( NUMBER_VALID_RESULTS )] );
+        //PRINT_CHAR( SEPERATOR );
+        //PRINT_INT( sysTick );
+        data = data + RESULT_REG( RES_CONFIDENCE_0 );
+        for ( i = 0; i < PRINT_NUMBER_RESULTS ; i++ )
+        {
+            data = print_result( driver, data, conf, dist, &cnt );
+        }
+        //PRINT_LN( );
+    }
+    else // result structure too short
+    {
+        PRINT_STR( "#Err" );
+        PRINT_CHAR( SEPERATOR );
+        PRINT_STR( "result too short" );
+        PRINT_CHAR( SEPERATOR );
+        PRINT_INT( len );
+        PRINT_LN( );
+    }
+}
+
+// Print histograms:
+// #Raw,<i2c_slave_address>,<sub_packet_number>,<data_0>,<data_1>,..,,<data_127>
+// #Cal,<i2c_slave_address>,<sub_packet_number>,<data_0>,<data_1>,..,,<data_127>
+void print_histogram ( tmf8828Driver * driver, uint8_t * data, uint8_t len )
+{
+    if ( len >= TMF8828_COM_HISTOGRAM_PACKET_SIZE )
+    {
+        uint8_t i;
+        uint8_t * ptr = &( data[ RESULT_REG( SUBPACKET_PAYLOAD_0 ) ] );
+        if ( data[0] & TMF8828_COM_HIST_DUMP__histogram__raw_24_bit_histogram )
+        {
+            PRINT_STR( "#Raw" );
+        }
+        else if ( data[0] & TMF8828_COM_HIST_DUMP__histogram__electrical_calibration_24_bit_histogram )
+        {
+            PRINT_STR( "#Cal" );
+        }
+        else
+        {
+            PRINT_STR( "#???" );
+        }
+        PRINT_CHAR( SEPERATOR );
+        PRINT_INT( driver->i2cSlaveAddress );
+        PRINT_CHAR( SEPERATOR );
+        PRINT_INT( data[ RESULT_REG( SUBPACKET_NUMBER ) ] );          // print the sub-packet number indicating the third-of-a-channel/tdc the histogram belongs to
+
+        for ( i = 0; i < TMF8828_NUMBER_OF_BINS_PER_CHANNEL ; i++, ptr++ )
+        {
+            PRINT_CHAR( SEPERATOR );
+            PRINT_INT( *ptr );
+        }
+        PRINT_LN( );
+    }
+    // else structure too short
 }
 
 /*************************************/
@@ -460,6 +593,63 @@ int8_t tmf8828Configure ( tmf8828Driver * driver, uint16_t periodInMs, uint16_t 
     return stat;
 }
 
+static int8_t tmf8828ConfigInternal( tmf8828Driver * driver, uint16_t periodInMs, uint16_t kiloIterations, uint8_t spadMapId, uint16_t lowThreshold, uint16_t highThreshold, uint8_t persistence, uint32_t intMask, uint8_t dumpHistogram )
+{
+    int8_t stat = APP_ERROR_PARAM;
+    stat = tmf8828LoadConfigPageCommon( driver );          // first load the page, then only overwrite the registers you want to change
+    if ( stat == APP_SUCCESS_OK )
+    {
+        dataBuffer[0] = (uint8_t)periodInMs;            // lsb
+        dataBuffer[1] = (uint8_t)(periodInMs>>8);       // msb
+        dataBuffer[2] = (uint8_t)kiloIterations;        // lsb  - kilo iterations are right behind the period so we can write with one i2c tx
+        dataBuffer[3] = (uint8_t)(kiloIterations>>8);   // msb
+        dataBuffer[4] = (uint8_t)lowThreshold;          // lsb
+        dataBuffer[5] = (uint8_t)(lowThreshold>>8);     // msb
+        dataBuffer[6] = (uint8_t)highThreshold;         // lsb
+        dataBuffer[7] = (uint8_t)(highThreshold>>8);    // msb
+        dataBuffer[8] = (uint8_t)intMask;               // lsb
+        dataBuffer[9] = (uint8_t)(intMask>>8);          // mid
+        dataBuffer[10] = (uint8_t)(intMask>>16);        // msb
+        dataBuffer[11] = persistence;
+        i2cTxReg( driver, driver->i2cSlaveAddress, TMF8828_COM_PERIOD_MS_LSB, 12, dataBuffer );
+        dataBuffer[0] = spadMapId;                      // spad map ID is a different reg, so use a seperate i2c tx
+        i2cTxReg( driver, driver->i2cSlaveAddress, TMF8828_COM_SPAD_MAP_ID, 1, dataBuffer );
+        dataBuffer[0] = dumpHistogram & 0x3;            // only raw histograms and/or EC histograms
+        i2cTxReg( driver, driver->i2cSlaveAddress, TMF8X2X_COM_HIST_DUMP, 1, dataBuffer );
+        dataBuffer[0] = TMF8828_ENABLE_LOGARITHMIC_CONFIDENCE;
+        i2cTxReg( driver, driver->i2cSlaveAddress, TMF8X2X_COM_ALG_SETTING_0, 1, dataBuffer );
+        stat = tmf8828WriteConfigPage( driver );               // as a last step write the config page back
+    }
+    if ( stat != APP_SUCCESS_OK )
+    {
+        if ( driver->logLevel >=LOG_LEVEL_ERROR )
+        {
+            PRINT_STR( "#Err" );
+            PRINT_CHAR( ',' );
+            PRINT_STR( "Config " );
+            PRINT_INT( stat );
+            PRINT_LN( );
+        }
+    }
+    return stat;
+}
+
+// configure device according to given parameters
+int8_t tmf8828ConfigureFull ( tmf8828Driver * driver, uint16_t periodInMs, uint16_t kiloIterations, uint8_t spadMapId, uint16_t lowThreshold, uint16_t highThreshold, uint8_t persistence, uint32_t intMask, uint8_t dumpHistogram  )
+{
+    i2cRxReg( driver, driver->i2cSlaveAddress, TMF8828_COM_TMF8828_MODE, 1, dataBuffer );
+    if ( dataBuffer[0] == TMF8828_COM_TMF8828_MODE__mode__TMF8828 )
+    {
+        spadMapId = 15;	// 8x8 only can work with SPAD map 15, override it for convenience to 15 always
+    }
+    else if ( spadMapId > 13 )   // no custom spad maps supported
+    {
+        return  APP_ERROR_PARAM;
+    }
+    return tmf8828ConfigInternal( driver, periodInMs, kiloIterations, spadMapId, lowThreshold, highThreshold, persistence, intMask, dumpHistogram );
+}
+
+
 // Function to reset the factory calibration. Call this function before providing the 4 factory
 // calibration pages for tmf8828.
 int8_t tmf8828ResetFactoryCalibration ( tmf8828Driver * driver )
@@ -597,6 +787,76 @@ int8_t tmf8828ReadResults ( tmf8828Driver * driver, int *conf, int *dist, int *s
         uint32_t tTick = tmf8828GetUint32( dataBuffer + RESULT_REG( SYS_TICK_0 ) );
         tmf8828ClockCorrectionAddPair( driver, hTick, tTick );
         print_results( driver, dataBuffer, TMF8828_COM_CONFIG_RESULT__measurement_result_size, conf, dist, subcapture_nr );
+        return APP_SUCCESS_OK;
+    }
+    return APP_ERROR_NO_RESULT_PAGE;
+}
+
+// function prints a single result, and returns incremented pointer
+static uint8_t * print_resultFn ( tmf8828Driver * driver, uint8_t * data )
+{
+    uint8_t confidence = data[0];               // 1st byte is confidence
+    uint16_t distance = data[2];                // 3rd byte is MSB distance
+    distance = (distance << 8) + data[1];       // 2nd byte is LSB distnace
+    distance = tmf8828CorrectDistance( driver, distance );
+    PRINT_CHAR( ',' );
+    PRINT_INT( distance );
+    PRINT_CHAR( ',' );
+    PRINT_INT( confidence );
+    return data+3;                              // for convenience only, return the new pointer
+}
+
+// Results printing:
+// #Obj,<i2c_slave_address>,<result_number>,<temperature>,<number_valid_results>,<systick>,<distance_0_mm>,<confidence_0>,<distance_1_mm>,<distance_1>, ...
+void printResults ( void * dptr, uint8_t * data, uint8_t len )
+{
+    tmf8828Driver * driver = (tmf8828Driver *)dptr;
+    if ( len >= TMF8828_COM_CONFIG_RESULT__measurement_result_size )
+    {
+        int8_t i;
+        uint32_t sysTick = tmf8828GetUint32( data + RESULT_REG( SYS_TICK_0 ) );
+        PRINT_STR( "#Obj" );
+        PRINT_CHAR( ',' );
+        PRINT_INT( driver->i2cSlaveAddress );
+        PRINT_CHAR( ',' );
+        PRINT_INT( data[ RESULT_REG( RESULT_NUMBER) ] );
+        PRINT_CHAR( ',' );
+        PRINT_INT( data[ RESULT_REG( TEMPERATURE )] );
+        PRINT_CHAR( ',' );
+        PRINT_INT( data[ RESULT_REG( NUMBER_VALID_RESULTS )] );
+        PRINT_CHAR( ',' );
+        //PRINT_INT( sysTick );
+        printf("%lu", sysTick);
+        data = data + RESULT_REG( RES_CONFIDENCE_0 );
+        for ( i = 0; i < PRINT_NUMBER_RESULTS ; i++ )
+        {
+            data = print_resultFn( driver, data );
+        }
+        PRINT_LN( );
+    }
+    else // result structure too short
+    {
+        PRINT_STR( "#Err" );
+        PRINT_CHAR( ',' );
+        PRINT_STR( "result too short" );
+        PRINT_CHAR( ',' );
+        PRINT_INT( len );
+        PRINT_LN( );
+    }
+}
+
+// function reads the result page (if there is none the function returns an error, else success)
+int8_t tmf8828ReadResultsFn ( tmf8828Driver * driver )
+{
+    uint32_t hTick;            // get the sys-tick just before the I2C rx
+    dataBuffer[0] = 0;
+    hTick = get_sys_tick( );            // get the sys-tick just before the I2C rx
+    i2cRxReg( driver, driver->i2cSlaveAddress, TMF8828_COM_CONFIG_RESULT, TMF8828_COM_CONFIG_RESULT__measurement_result_size, dataBuffer );
+    if ( dataBuffer[0] == TMF8828_COM_CONFIG_RESULT__measurement_result )
+    {
+        uint32_t tTick = tmf8828GetUint32( dataBuffer + RESULT_REG( SYS_TICK_0 ) );
+        tmf8828ClockCorrectionAddPair( driver, hTick, tTick );
+        printResults( driver, dataBuffer, TMF8828_COM_CONFIG_RESULT__measurement_result_size );
         return APP_SUCCESS_OK;
     }
     return APP_ERROR_NO_RESULT_PAGE;

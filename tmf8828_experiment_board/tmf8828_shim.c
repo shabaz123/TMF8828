@@ -4,10 +4,34 @@
 #include "tmf8828_shim.h"
 #include "wire.h"
 
+
 uint8_t logLevel = 0;
+//uint8_t dataBuffer[ DATA_BUFFER_SIZE ];           // transfer/receive buffer
 
 i2c_inst_t *i2c_port_shim;
 uint8_t i2c_addr_shim;
+
+void configurePins(void) {
+    // configure ENABLE_PIN as output
+    gpio_init(ENABLE_PIN);
+    gpio_set_dir(ENABLE_PIN, GPIO_OUT);
+    // configure INTERRUPT_PIN as input
+    gpio_init(INTERRUPT_PIN);
+    gpio_set_dir(INTERRUPT_PIN, GPIO_IN);
+    // configure TRIGGER_INTERRUPT_PIN as input
+    //gpio_init(TRIGGER_INTERRUPT_PIN);
+    //gpio_set_dir(TRIGGER_INTERRUPT_PIN, GPIO_IN);
+}
+
+
+
+void tmf8828DisableFn(void) {
+    gpio_put(ENABLE_PIN, 0);
+}
+
+void tmf8828EnableFn(void) {
+    gpio_put(ENABLE_PIN, 1);
+}
 
 void delay_in_microseconds ( uint32_t wait )
 {
@@ -168,109 +192,147 @@ void i2c_rx ( uint8_t slave_addr, uint8_t reg, uint8_t *buf, uint8_t len )
 }
 
 
-// function prints a single result, and returns incremented pointer
-static uint8_t * print_result ( tmf8828Driver * driver, uint8_t * data, int *conf, int *dist, int *idx )
-{
-    uint8_t confidence = data[0];               // 1st byte is confidence
-    uint16_t distance = data[2];                // 3rd byte is MSB distance
-    distance = (distance << 8);       // 2nd byte is LSB distnace
-    distance = distance + data[1];
-    distance = tmf8828CorrectDistance( driver, distance );
-    //PRINT_CHAR( SEPERATOR );
-    //PRINT_INT( distance );
-    //PRINT_CHAR( SEPERATOR );
-    //PRINT_INT( confidence );
-    int offset = 0;
-    if ((*idx) > 35) {
-        offset = 4;
-    }
-    else if ((*idx) > 26) {
-        offset = 3;
-    }
-    else if ((*idx) > 17) {
-        offset = 2;
-    }
-    else if ((*idx) > 8){
-        offset = 1;
-    }
-    conf[(*idx) - offset] = confidence;
-    dist[(*idx) - offset] = distance;
-    (*idx)++;
-    return data+3;                              // for convenience only, return the new pointer
-}
 
-// Results printing:
-// #Obj,<i2c_slave_address>,<result_number>,<temperature>,<number_valid_results>,<systick>,<distance_0_mm>,<confidence_0>,<distance_1_mm>,<distance_1>, ...
-void print_results ( tmf8828Driver * driver, uint8_t * data, uint8_t len, int *conf, int *dist, int *subcapture_nr )
-{
-    if ( len >= TMF8828_COM_CONFIG_RESULT__measurement_result_size )
-    {
-        int cnt = 0;
-        int8_t i;
-        //uint32_t sysTick = tmf8828GetUint32( data + RESULT_REG( SYS_TICK_0 ) );
-        //PRINT_STR( "#Obj" );
-        //PRINT_CHAR( SEPERATOR );
-        //PRINT_INT( driver->i2cSlaveAddress );
-        //PRINT_CHAR( SEPERATOR );
-        //PRINT_INT( data[ RESULT_REG( RESULT_NUMBER) ] );
-        (*subcapture_nr) = data[ RESULT_REG( RESULT_NUMBER) ];
-        //PRINT_CHAR( SEPERATOR );
-        //PRINT_INT( data[ RESULT_REG( TEMPERATURE )] );
-        //PRINT_CHAR( SEPERATOR );
-        //PRINT_INT( data[ RESULT_REG( NUMBER_VALID_RESULTS )] );
-        //PRINT_CHAR( SEPERATOR );
-        //PRINT_INT( sysTick );
-        data = data + RESULT_REG( RES_CONFIDENCE_0 );
-        for ( i = 0; i < PRINT_NUMBER_RESULTS ; i++ )
-        {
-            data = print_result( driver, data, conf, dist, &cnt );
-        }
-        //PRINT_LN( );
-    }
-    else // result structure too short
-    {
-        PRINT_STR( "#Err" );
-        PRINT_CHAR( SEPERATOR );
-        PRINT_STR( "result too short" );
-        PRINT_CHAR( SEPERATOR );
-        PRINT_INT( len );
-        PRINT_LN( );
-    }
-}
 
-// Print histograms:
-// #Raw,<i2c_slave_address>,<sub_packet_number>,<data_0>,<data_1>,..,,<data_127>
-// #Cal,<i2c_slave_address>,<sub_packet_number>,<data_0>,<data_1>,..,,<data_127>
-void print_histogram ( tmf8828Driver * driver, uint8_t * data, uint8_t len )
-{
-    if ( len >= TMF8828_COM_HISTOGRAM_PACKET_SIZE )
+
+
+// ----------------------------------------- i2c ---------------------------------------
+
+static int8_t i2cTxOnly ( uint8_t logLevel, uint8_t slaveAddr, uint8_t regAddr, uint16_t toTx, const uint8_t * txData )
+{  // split long transfers into max of 32-bytes: 1 byte is register address, up to 31 are payload.
+    int8_t res = I2C_SUCCESS;
+    int retval = 0;
+    uint8_t txbuf[33];
+    do
     {
-        uint8_t i;
-        uint8_t * ptr = &( data[ RESULT_REG( SUBPACKET_PAYLOAD_0 ) ] );
-        if ( data[0] & TMF8828_COM_HIST_DUMP__histogram__raw_24_bit_histogram )
+        uint8_t tx;
+        if ( toTx > ARDUINO_MAX_I2C_TRANSFER - 1)
         {
-            PRINT_STR( "#Raw" );
-        }
-        else if ( data[0] & TMF8828_COM_HIST_DUMP__histogram__electrical_calibration_24_bit_histogram )
-        {
-            PRINT_STR( "#Cal" );
+            tx = ARDUINO_MAX_I2C_TRANSFER - 1;
         }
         else
         {
-            PRINT_STR( "#???" );
+            tx = toTx; // less than 31 bytes
         }
-        PRINT_CHAR( SEPERATOR );
-        PRINT_INT( driver->i2cSlaveAddress );
-        PRINT_CHAR( SEPERATOR );
-        PRINT_INT( data[ RESULT_REG( SUBPACKET_NUMBER ) ] );          // print the sub-packet number indicating the third-of-a-channel/tdc the histogram belongs to
-
-        for ( i = 0; i < TMF8828_NUMBER_OF_BINS_PER_CHANNEL ; i++, ptr++ )
+        if ( logLevel & LOG_LEVEL_I2C )
         {
-            PRINT_CHAR( SEPERATOR );
-            PRINT_INT( *ptr );
+            PRINT_STR( "I2C-TX (0x" );
+            printf( "%02x", slaveAddr );
+            PRINT_STR( ")" );
+            PRINT_STR( " tx=" );
+            PRINT_INT( tx+1 );          // +1 for regAddr
+            PRINT_STR( " 0x" );
+            printf( "%02x", regAddr );
+            if ( logLevel >= LOG_LEVEL_DEBUG )
+            {
+                uint8_t dumpTx = tx;
+                const uint8_t * dump = txData;
+                while ( dumpTx-- )
+                {
+                    PRINT_STR( " 0x" );
+                    printf( "%02x", *dump );
+                    dump++;
+                }
+            }
+            PRINT_LN( );
         }
-        PRINT_LN( );
+
+        i2c_addr_shim = slaveAddr;
+        txbuf[0] = regAddr;
+        for (int i = 0; i < tx; i++) {
+            txbuf[i+1] = txData[i];
+        }
+        retval = i2c_write_blocking(i2c_port_shim, i2c_addr_shim, txbuf, tx+1, false);
+        res = I2C_SUCCESS;
+
+        toTx -= tx;
+        txData += tx;
+        regAddr += tx;
+
+    } while ( toTx && res == I2C_SUCCESS );
+    return I2C_SUCCESS;
+}
+
+static int8_t i2cRxOnly ( uint8_t logLevel, uint8_t slaveAddr, uint16_t toRx, uint8_t * rxData )
+{   // split long transfers into max of 32-bytes
+    uint8_t expected = 0;
+    int retval = 0;
+    uint8_t rx = 0;
+    int8_t res = I2C_SUCCESS;
+    do
+    {
+        uint8_t * dump = rxData; // in case we dump on uart, we need the pointer
+        if ( toRx > ARDUINO_MAX_I2C_TRANSFER )
+        {
+            expected = ARDUINO_MAX_I2C_TRANSFER;
+        }
+        else
+        {
+            expected = toRx; // less than 32 bytes
+        }
+        // Wire.requestFrom( slaveAddr, expected );
+        rx = 0;
+        retval = i2c_read_blocking(i2c_port_shim, i2c_addr_shim, rxData, expected, false);
+        rxData += expected;
+        toRx -= expected;
+        rx += expected;
+
+        if ( logLevel & LOG_LEVEL_I2C )
+        {
+            PRINT_STR( "I2C-RX (0x" );
+            printf( "%02x", slaveAddr );
+            PRINT_STR( ")" );
+            PRINT_STR( " toRx=" );
+            PRINT_INT( rx );
+            if ( logLevel >= LOG_LEVEL_DEBUG )
+            {
+                uint8_t dumpRx = rx;
+                while ( dumpRx-- )
+                {
+                    PRINT_STR( " 0x" );
+                    printf( "%02x", *dump );
+                    dump++;
+                }
+            }
+            PRINT_LN( );
+        }
+    } while ( toRx && expected == rx );
+    if ( toRx || expected != rx )
+    {
+        res = I2C_ERR_TIMEOUT;
     }
-    // else structure too short
+    return res;
+}
+
+int8_t i2cTxReg ( void * dptr, uint8_t slaveAddr, uint8_t regAddr, uint16_t toTx, const uint8_t * txData )
+{  // split long transfers into max of 32-bytes
+    tmf8828Driver * driver = (tmf8828Driver *)dptr;
+    return i2cTxOnly( driver->logLevel, slaveAddr, regAddr, toTx, txData );
+}
+
+int8_t i2cRxReg ( void * dptr, uint8_t slaveAddr, uint8_t regAddr, uint16_t toRx, uint8_t * rxData )
+{   // split long transfers into max of 32-bytes
+    tmf8828Driver * driver = (tmf8828Driver *)dptr;
+    int8_t res = i2cTxOnly( driver->logLevel, slaveAddr, regAddr, 0, 0 );
+    if ( res == I2C_SUCCESS )
+    {
+        res = i2cRxOnly( driver->logLevel, slaveAddr, toRx, rxData );
+    }
+    return res;
+}
+
+int8_t i2cTxRx ( void * dptr, uint8_t slaveAddr, uint16_t toTx, const uint8_t * txData, uint16_t toRx, uint8_t * rxData )
+{
+    tmf8828Driver * driver = (tmf8828Driver *)dptr;
+    int8_t res = I2C_SUCCESS;
+    if ( toTx )
+    {
+        res = i2cTxOnly( driver->logLevel, slaveAddr, *txData, toTx-1, txData+1 );
+    }
+    if ( toRx && res == I2C_SUCCESS )
+    {
+        res = i2cRxOnly( driver->logLevel, slaveAddr, toRx, rxData );
+    }
+    return res;
 }
 

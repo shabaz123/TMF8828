@@ -88,6 +88,9 @@ void configure ( )
     PRINT_LN( );
 }
 
+
+
+
 // Print the current state (stateTmf8828) in a readable format
 void printState ( )
 {

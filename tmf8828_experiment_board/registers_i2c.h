@@ -861,4 +861,330 @@
 #define CTRLOCC__ate_is_refclk__RESET 0
 #define CTRLOCC__ate_is_refclk 4
 
+#define TMF8828_ENABLE 0xe0
+#define TMF8828_ENABLE__cpu_reset__MASK  0x80
+#define TMF8828_ENABLE__cpu_reset__WIDTH 1
+#define TMF8828_ENABLE__cpu_reset__SHIFT 7
+#define TMF8828_ENABLE__cpu_reset__RESET 0
+#define TMF8828_ENABLE__cpu_reset 128
+#define TMF8828_ENABLE__cpu_ready__MASK  0x40
+#define TMF8828_ENABLE__cpu_ready__WIDTH 1
+#define TMF8828_ENABLE__cpu_ready__SHIFT 6
+#define TMF8828_ENABLE__cpu_ready__RESET 0
+#define TMF8828_ENABLE__cpu_ready 64
+#define TMF8828_ENABLE__powerup_select__MASK  0x30
+#define TMF8828_ENABLE__powerup_select__WIDTH 2
+#define TMF8828_ENABLE__powerup_select__SHIFT 4
+#define TMF8828_ENABLE__powerup_select__RESET 0
+// Enumeration for powerup_select
+#define TMF8828_ENABLE__powerup_select__no_override 0 // Do what is selected in the boot_select fuses
+#define TMF8828_ENABLE__powerup_select__start_boot_monitor 1 // Always start the boot monitor, do not go to sleep
+#define TMF8828_ENABLE__powerup_select__start_app_in_ram 2 // Start the application that is in RAM
+#define TMF8828_ENABLE__powerup_select__reserved 3 // Reserved for future use
+
+#define TMF8828_ENABLE__pinmux_unlock__MASK  0x8
+#define TMF8828_ENABLE__pinmux_unlock__WIDTH 1
+#define TMF8828_ENABLE__pinmux_unlock__SHIFT 3
+#define TMF8828_ENABLE__pinmux_unlock__RESET 0
+#define TMF8828_ENABLE__pinmux_unlock 8
+#define TMF8828_ENABLE__timed_standby_mode__MASK  0x4
+#define TMF8828_ENABLE__timed_standby_mode__WIDTH 1
+#define TMF8828_ENABLE__timed_standby_mode__SHIFT 2
+#define TMF8828_ENABLE__timed_standby_mode__RESET 0
+#define TMF8828_ENABLE__timed_standby_mode 4
+#define TMF8828_ENABLE__standby_mode__MASK  0x2
+#define TMF8828_ENABLE__standby_mode__WIDTH 1
+#define TMF8828_ENABLE__standby_mode__SHIFT 1
+#define TMF8828_ENABLE__standby_mode__RESET 0
+#define TMF8828_ENABLE__standby_mode 2
+#define TMF8828_ENABLE__pon__MASK  0x1
+#define TMF8828_ENABLE__pon__WIDTH 1
+#define TMF8828_ENABLE__pon__SHIFT 0
+#define TMF8828_ENABLE__pon__RESET 1
+#define TMF8828_ENABLE__pon 1
+
+#define TMF8828_INT_STATUS 0xe1
+#define TMF8828_INT_STATUS__int8__MASK  0x80
+#define TMF8828_INT_STATUS__int8__WIDTH 1
+#define TMF8828_INT_STATUS__int8__SHIFT 7
+#define TMF8828_INT_STATUS__int8__RESET 0
+#define TMF8828_INT_STATUS__int8 128
+#define TMF8828_INT_STATUS__int7__MASK  0x40
+#define TMF8828_INT_STATUS__int7__WIDTH 1
+#define TMF8828_INT_STATUS__int7__SHIFT 6
+#define TMF8828_INT_STATUS__int7__RESET 0
+#define TMF8828_INT_STATUS__int7 64
+#define TMF8828_INT_STATUS__int6__MASK  0x20
+#define TMF8828_INT_STATUS__int6__WIDTH 1
+#define TMF8828_INT_STATUS__int6__SHIFT 5
+#define TMF8828_INT_STATUS__int6__RESET 0
+#define TMF8828_INT_STATUS__int6 32
+#define TMF8828_INT_STATUS__int5__MASK  0x10
+#define TMF8828_INT_STATUS__int5__WIDTH 1
+#define TMF8828_INT_STATUS__int5__SHIFT 4
+#define TMF8828_INT_STATUS__int5__RESET 0
+#define TMF8828_INT_STATUS__int5 16
+#define TMF8828_INT_STATUS__int4__MASK  0x8
+#define TMF8828_INT_STATUS__int4__WIDTH 1
+#define TMF8828_INT_STATUS__int4__SHIFT 3
+#define TMF8828_INT_STATUS__int4__RESET 0
+#define TMF8828_INT_STATUS__int4 8
+#define TMF8828_INT_STATUS__int3__MASK  0x4
+#define TMF8828_INT_STATUS__int3__WIDTH 1
+#define TMF8828_INT_STATUS__int3__SHIFT 2
+#define TMF8828_INT_STATUS__int3__RESET 0
+#define TMF8828_INT_STATUS__int3 4
+#define TMF8828_INT_STATUS__int2__MASK  0x2
+#define TMF8828_INT_STATUS__int2__WIDTH 1
+#define TMF8828_INT_STATUS__int2__SHIFT 1
+#define TMF8828_INT_STATUS__int2__RESET 0
+#define TMF8828_INT_STATUS__int2 2
+#define TMF8828_INT_STATUS__int1__MASK  0x1
+#define TMF8828_INT_STATUS__int1__WIDTH 1
+#define TMF8828_INT_STATUS__int1__SHIFT 0
+#define TMF8828_INT_STATUS__int1__RESET 0
+#define TMF8828_INT_STATUS__int1 1
+
+#define TMF8828_INT_ENAB 0xe2
+#define TMF8828_INT_ENAB__int8_enab__MASK  0x80
+#define TMF8828_INT_ENAB__int8_enab__WIDTH 1
+#define TMF8828_INT_ENAB__int8_enab__SHIFT 7
+#define TMF8828_INT_ENAB__int8_enab__RESET 0
+#define TMF8828_INT_ENAB__int8_enab 128
+#define TMF8828_INT_ENAB__int7_enab__MASK  0x40
+#define TMF8828_INT_ENAB__int7_enab__WIDTH 1
+#define TMF8828_INT_ENAB__int7_enab__SHIFT 6
+#define TMF8828_INT_ENAB__int7_enab__RESET 0
+#define TMF8828_INT_ENAB__int7_enab 64
+#define TMF8828_INT_ENAB__int6_enab__MASK  0x20
+#define TMF8828_INT_ENAB__int6_enab__WIDTH 1
+#define TMF8828_INT_ENAB__int6_enab__SHIFT 5
+#define TMF8828_INT_ENAB__int6_enab__RESET 0
+#define TMF8828_INT_ENAB__int6_enab 32
+#define TMF8828_INT_ENAB__int5_enab__MASK  0x10
+#define TMF8828_INT_ENAB__int5_enab__WIDTH 1
+#define TMF8828_INT_ENAB__int5_enab__SHIFT 4
+#define TMF8828_INT_ENAB__int5_enab__RESET 0
+#define TMF8828_INT_ENAB__int5_enab 16
+#define TMF8828_INT_ENAB__int4_enab__MASK  0x8
+#define TMF8828_INT_ENAB__int4_enab__WIDTH 1
+#define TMF8828_INT_ENAB__int4_enab__SHIFT 3
+#define TMF8828_INT_ENAB__int4_enab__RESET 0
+#define TMF8828_INT_ENAB__int4_enab 8
+#define TMF8828_INT_ENAB__int3_enab__MASK  0x4
+#define TMF8828_INT_ENAB__int3_enab__WIDTH 1
+#define TMF8828_INT_ENAB__int3_enab__SHIFT 2
+#define TMF8828_INT_ENAB__int3_enab__RESET 0
+#define TMF8828_INT_ENAB__int3_enab 4
+#define TMF8828_INT_ENAB__int2_enab__MASK  0x2
+#define TMF8828_INT_ENAB__int2_enab__WIDTH 1
+#define TMF8828_INT_ENAB__int2_enab__SHIFT 1
+#define TMF8828_INT_ENAB__int2_enab__RESET 0
+#define TMF8828_INT_ENAB__int2_enab 2
+#define TMF8828_INT_ENAB__int1_enab__MASK  0x1
+#define TMF8828_INT_ENAB__int1_enab__WIDTH 1
+#define TMF8828_INT_ENAB__int1_enab__SHIFT 0
+#define TMF8828_INT_ENAB__int1_enab__RESET 0
+#define TMF8828_INT_ENAB__int1_enab 1
+
+#define TMF8828_ID 0xe3
+#define TMF8828_ID__id__MASK  0x3f
+#define TMF8828_ID__id__WIDTH 6
+#define TMF8828_ID__id__SHIFT 0
+#define TMF8828_ID__id__RESET 08
+
+#define TMF8828_REVID 0xe4
+#define TMF8828_REVID__rev_id__MASK  0x7
+#define TMF8828_REVID__rev_id__WIDTH 3
+#define TMF8828_REVID__rev_id__SHIFT 0
+#define TMF8828_REVID__rev_id__RESET 0
+
+#define TMF8828_CLOCK 0xec
+#define TMF8828_CLOCK__pll_clk_select__MASK  0x40
+#define TMF8828_CLOCK__pll_clk_select__WIDTH 1
+#define TMF8828_CLOCK__pll_clk_select__SHIFT 6
+#define TMF8828_CLOCK__pll_clk_select__RESET 0
+#define TMF8828_CLOCK__pll_clk_select 64
+#define TMF8828_CLOCK__pll_on__MASK  0x20
+#define TMF8828_CLOCK__pll_on__WIDTH 1
+#define TMF8828_CLOCK__pll_on__SHIFT 5
+#define TMF8828_CLOCK__pll_on__RESET 0
+#define TMF8828_CLOCK__pll_on 32
+#define TMF8828_CLOCK__enab_pllclk__MASK  0x10
+#define TMF8828_CLOCK__enab_pllclk__WIDTH 1
+#define TMF8828_CLOCK__enab_pllclk__SHIFT 4
+#define TMF8828_CLOCK__enab_pllclk__RESET 0
+#define TMF8828_CLOCK__enab_pllclk 16
+#define TMF8828_CLOCK__pll_lost_lock__MASK  0x8
+#define TMF8828_CLOCK__pll_lost_lock__WIDTH 1
+#define TMF8828_CLOCK__pll_lost_lock__SHIFT 3
+#define TMF8828_CLOCK__pll_lost_lock__RESET 0
+#define TMF8828_CLOCK__pll_lost_lock 8
+#define TMF8828_CLOCK__enable_500khz_mode__MASK  0x4
+#define TMF8828_CLOCK__enable_500khz_mode__WIDTH 1
+#define TMF8828_CLOCK__enable_500khz_mode__SHIFT 2
+#define TMF8828_CLOCK__enable_500khz_mode__RESET 0
+#define TMF8828_CLOCK__enable_500khz_mode 4
+#define TMF8828_CLOCK__clock_spare__MASK  0x3
+#define TMF8828_CLOCK__clock_spare__WIDTH 2
+#define TMF8828_CLOCK__clock_spare__SHIFT 0
+#define TMF8828_CLOCK__clock_spare__RESET 0
+
+#define TMF8828_RESETREASON 0xf0
+#define TMF8828_RESETREASON__soft_reset__MASK  0x80
+#define TMF8828_RESETREASON__soft_reset__WIDTH 1
+#define TMF8828_RESETREASON__soft_reset__SHIFT 7
+#define TMF8828_RESETREASON__soft_reset__RESET 0
+#define TMF8828_RESETREASON__soft_reset 128
+#define TMF8828_RESETREASON__rrsn_power_on_timer__MASK  0x20
+#define TMF8828_RESETREASON__rrsn_power_on_timer__WIDTH 1
+#define TMF8828_RESETREASON__rrsn_power_on_timer__SHIFT 5
+#define TMF8828_RESETREASON__rrsn_power_on_timer__RESET 0
+#define TMF8828_RESETREASON__rrsn_power_on_timer 32
+#define TMF8828_RESETREASON__rrsn_power_on_i2c__MASK  0x10
+#define TMF8828_RESETREASON__rrsn_power_on_i2c__WIDTH 1
+#define TMF8828_RESETREASON__rrsn_power_on_i2c__SHIFT 4
+#define TMF8828_RESETREASON__rrsn_power_on_i2c__RESET 0
+#define TMF8828_RESETREASON__rrsn_power_on_i2c 16
+#define TMF8828_RESETREASON__rrsn_watchdog__MASK  0x8
+#define TMF8828_RESETREASON__rrsn_watchdog__WIDTH 1
+#define TMF8828_RESETREASON__rrsn_watchdog__SHIFT 3
+#define TMF8828_RESETREASON__rrsn_watchdog__RESET 0
+#define TMF8828_RESETREASON__rrsn_watchdog 8
+#define TMF8828_RESETREASON__rrsn_cpu_reset__MASK  0x4
+#define TMF8828_RESETREASON__rrsn_cpu_reset__WIDTH 1
+#define TMF8828_RESETREASON__rrsn_cpu_reset__SHIFT 2
+#define TMF8828_RESETREASON__rrsn_cpu_reset__RESET 0
+#define TMF8828_RESETREASON__rrsn_cpu_reset 4
+#define TMF8828_RESETREASON__rrsn_soft_reset__MASK  0x2
+#define TMF8828_RESETREASON__rrsn_soft_reset__WIDTH 1
+#define TMF8828_RESETREASON__rrsn_soft_reset__SHIFT 1
+#define TMF8828_RESETREASON__rrsn_soft_reset__RESET 0
+#define TMF8828_RESETREASON__rrsn_soft_reset 2
+#define TMF8828_RESETREASON__rrsn_coldstart__MASK  0x1
+#define TMF8828_RESETREASON__rrsn_coldstart__WIDTH 1
+#define TMF8828_RESETREASON__rrsn_coldstart__SHIFT 0
+#define TMF8828_RESETREASON__rrsn_coldstart__RESET 0
+#define TMF8828_RESETREASON__rrsn_coldstart 1
+
+// --------------------------------------------------- defines --------------------------------
+
+#define TMF8828_COM_APP_ID                                  0x0   // register address
+#define TMF8828_COM_APP_ID__application                     0x3   // measurement application id
+#define TMF8828_COM_APP_ID__bootloader                      0x80  // bootloader application id
+
+#define TMF8828_COM_TMF8828_MODE                            0x10 // mode register is either 0x00 == tmf8820/1 or 0x08 == tmf8828
+#define TMF8828_COM_TMF8828_MODE__mode__TMF8821             0    // the device is operating in 3x3/3x6/4x4 (TMF8820/TMF8821) mode
+#define TMF8828_COM_TMF8828_MODE__mode__TMF8828             8
+
+// --------------------------------------------------- bootloader -----------------------------
+
+#define TMF8X2X_BL_MAX_DATA_SIZE                  0x80  // Number of bytes that can be written or read with one BL command
+#define TMF8828_COM_CMD_STAT                      0x08
+
+#define TMF8828_COM_CMD_STAT__bl_cmd_ok           0x00
+#define TMF8828_COM_CMD_STAT__bl_cmd_errors       0x0F  // all success/error are below or equal to this number
+#define TMF8828_COM_CMD_STAT__bl_cmd_ramremap     0x11  // Bootloader command to remap the vector table into RAM (Start RAM application).
+#define TMF8828_COM_CMD_STAT__bl_cmd_r_ram        0x40  // Read from BL RAM.
+#define TMF8828_COM_CMD_STAT__bl_cmd_w_ram        0x41  // Write to BL RAM.
+#define TMF8828_COM_CMD_STAT__bl_cmd_addr_ram     0x43  // Set address pointer in RAM for Read/Write to BL RAM.
+
+#define BL_HEADER           2     // bootloader header is 2 bytes
+#define BL_MAX_DATA_PAYLOAD 128   // bootloader data payload can be up to 128
+#define BL_FOOTER           1     // bootloader footer is 1 byte
+
+// Bootloader maximum wait sequences
+#define BL_CMD_SET_ADDR_TIMEOUT_MS    1
+#define BL_CMD_W_RAM_TIMEOUT_MS       1
+#define BL_CMD_RAM_REMAP_TIMEOUT_MS   1
+
+// wait time for clock source select change to take effect
+#define CLK_SRC_SELECT_WAIT_MS        1
+// wait for version readout, to switch from ROM to RAM (and have the version published on I2C)
+#define APP_PUBLISH_VERSION_WAIT_TIME_MS 10
+
+// --------------------------------------------------- application ----------------------------
+
+// application status, we check only for ok or accepted, everything between 2 and 15 (inclusive)
+// is an error
+#define TMF8828_COM_CMD_STAT__stat_ok                       0x0  // Everything is okay
+#define TMF8828_COM_CMD_STAT__stat_accepted                 0x1  // Everything is okay too, send sop to halt ongoing command
+
+// application commands
+#define TMF8828_COM_CMD_STAT__cmd_measure                             0x10  // Start a measurement
+#define TMF8828_COM_CMD_STAT__cmd_stop                                0xff  // Stop a measurement
+#define TMF8828_COM_CMD_STAT__cmd_write_config_page                   0x15  // Write the active config page
+#define TMF8828_COM_CMD_STAT__cmd_load_config_page_common             0x16  // Load the common config page
+#define TMF8828_COM_CMD_STAT__cmd_load_config_page_factory_calib      0x19  // Load the factory calibration config page
+#define TMF8828_COM_CMD_STAT__cmd_stat__CMD_RESET_FACTORY_CALIBRATION 0x1F // Manually reset the factory calibration. Only supported if 8x8_measurements = 1.
+#define TMF8828_COM_CMD_STAT__cmd_factory_calibration                 0x20  // Perform a factory calibration
+
+#define TMF8828_COM_CMD_STAT__cmd_i2c_slave_address                   0x21  // change I2C address
+
+#define TMF8828_COM_CMD_STAT__cmd_stat__CMD_SWITCH_TMF8821_MODE       0x65 // Switch to 3x3/3x6/4x4 mode. The device will need to be re-configured after this command. Only supported if 8x8_measurements = 1.
+#define TMF8828_COM_CMD_STAT__cmd_stat__CMD_SWITCH_TMF8828_MODE       0x6C // Switch to 8x8 mode. The device will need to be re-configured after this command. Only supported if 8x8_measurements = 1.
+
+#define TMF8828_COM_SERIAL_NUMBER_0                         0x1c // register with serial number
+
+// configuration page addresses and defines
+#define TMF8828_COM_PERIOD_MS_LSB                           0x24  // period in milliseconds
+#define TMF8828_COM_PERIOD_MS_MSB                           0x25
+#define TMF8828_COM_KILO_ITERATIONS_LSB                     0x26  // Kilo (1024) iterations
+#define TMF8828_COM_KILO_ITERATIONS_MSB                     0x27
+#define TMF8828_COM_SPAD_MAP_ID                             0x34  // configure the SPAD map id, with some example maps
+#define TMF8828_COM_SPAD_MAP_ID__map_last                   0x15  // maximum allowed spad map id, for tmf8828 only 15 is allowed
+#define TMF8X2X_COM_HIST_DUMP                               0x39  // 0 ... all off, 1 ... raw histograms, 2 ... ec histograms
+#define TMF8X2X_COM_I2C_SLAVE_ADDRESS                       0x3b  // register that holds the 7-bit shifted slave address
+#define TMF8X2X_COM_ALG_SETTING_0                           0x35  // register that holds the algorithm settings
+
+/* show distance results with extended confidence range
+   report distances -> 0x04
+   switch on extended confidence range -> 0x80
+   0x04 | 0x80 -> 0x84
+   please see TMF882X data sheet for details
+*/
+#define TMF8828_ENABLE_LOGARITHMIC_CONFIDENCE               0x84
+// Application maximum wait sequences
+#define APP_CMD_LOAD_CONFIG_TIMEOUT_MS                      3
+#define APP_CMD_WRITE_CONFIG_TIMEOUT_MS                     3
+#define APP_CMD_MEASURE_TIMEOUT_MS                          5
+#define APP_CMD_STOP_TIMEOUT_MS                             25
+#define APP_CMD_FACTORY_CALIB_TIMEOUT_MS                    2000
+#define APP_CMD_I2C_SLAVE_ADDRESS_TIMEOUT_MS                1
+#define APP_CMD_SWITCH_MODE_CMD_TIMEOUT_MS                  1     // timeout until command is accepted
+#define APP_CMD_SWITCH_MODE_TIMEOUT_MS                      10
+
+// -------------------------------------------------------- some checks --------------------------------------------
+
+// check that we can read a complete result page also in the dataBuffer
+#define DATA_BUFFER_SIZE                  (TMF8828_COM_CONFIG_FACTORY_CALIB__factory_calibration_size)
+
+#if ( ( (BL_HEADER + BL_MAX_DATA_PAYLOAD + BL_FOOTER + 1) > DATA_BUFFER_SIZE ) || ( (TMF8828_COM_CONFIG_RESULT__measurement_result_size) > DATA_BUFFER_SIZE ) )
+//#error "Increase data buffer size"
+#endif
+
+
+// clock correction pairs index calculation
+#define CLK_CORRECTION_IDX_MODULO( x )    ( (x) & ( (CLK_CORRECTION_PAIRS)-1 ) )
+
+// how accurate the calculation is going to be. The higher the accuracy the less far apart are
+// the pairs allowed. An 8 precision means that the factor is 1/256 accurate.
+#define CALC_PRECISION                                                  8
+// Need this to add to the corrected distance before shifting right
+#define HALF_CALC_PRECISION                                             ( 1 << ((CALC_PRECISION) - 1 ) )
+#define CALC_DISTANCE_CORR_FACTOR( hostTickDiff, tmf8828TickDiff )      ( ( ( (hostTickDiff) * (TMF8828_TICKS_PER_US) ) << (CALC_PRECISION) ) / ( (tmf8828TickDiff) * (HOST_TICKS_PER_US) ) )
+// Round before performing the division (right shift), make sure it is a logical shift right and not an arithmetical shift right
+#define CALC_DISTANCE( distance, hostTickDiff, tmf8828TickDiff )        ( ( (uint32_t)( (distance) * CALC_DISTANCE_CORR_FACTOR( hostTickDiff, tmf8828TickDiff ) + (HALF_CALC_PRECISION) ) ) >> (CALC_PRECISION) )
+
+// Find the maximum distance values to avoid mathematical errors due to overflow
+#define MAX_HOST_DIFF_VALUE                                             ( ( 0xFFFFFFFFUL / (TMF8828_TICKS_PER_US) ) >> CALC_PRECISION )
+#define MAX_TMF8828_DIFF_VALUE                                          ( ( 0xFFFFFFFFUL / (HOST_TICKS_PER_US) )
+
+// Saturation macro for 16-bit
+#define SATURATE16( v )                                                 ( (v) > 0xFFFF ? 0xFFFF : (v) )
+
+// For TMF882x sys ticks to be valid the LSB must be set.
+#define TMF8828_SYS_TICK_IS_VALID( tick )                               ( (tick) & 1 )
+
+
 #endif // REGISTERS_I2C_H

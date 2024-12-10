@@ -13,6 +13,10 @@
 // tmf8828 has as default i2c slave address
 #define TMF8828_SLAVE_ADDR          0x41
 
+// Clock correction pairs must be a power of 2 value.
+#define CLK_CORRECTION_PAIRS                4   // how many clock correction pairs are stored
+
+
 // important wait timings
 #define CAP_DISCHARGE_TIME_MS       3                     // wait time until we are sure the PCB's CAP has dischared properly
 #define ENABLE_TIME_MS              1                     // wait time after enable pin is high
@@ -151,14 +155,65 @@
 #define MAX_TMF8828_DIFF_VALUE                                          ( ( 0xFFFFFFFFUL / (HOST_TICKS_PER_US) )
 
 // Saturation macro for 16-bit
+#ifndef SATURATE16
 #define SATURATE16( v )                                                 ( v > 0xFFFF ? 0xFFFF : (uint16_t)v )
+#endif
 
 // For TMF882x sys ticks to be valid the LSB must be set.
 #define TMF8828_SYS_TICK_IS_VALID( tick )                               ( (tick) & 1 )
 
+
+typedef struct _tmf8828DeviceInfo
+{
+    uint32_t deviceSerialNumber;                      /**< serial number of device, if 0 not read */
+    uint8_t appVersion[4];                            /**< application version number (app id, major, minor, patch) */
+    uint8_t chipVersion[2];                           /**< chip version (Id, revId) */
+} tmf8828DeviceInfo;
+
+typedef struct _tmf8828DriverInfo
+{
+    uint8_t version[2];                               /**< this driver version number major.minor*/
+} tmf8828DriverInfo;
+
+// Each tmf8828 driver instance needs a data structure like this
+typedef struct _tmf8828Driver
+{
+    tmf8828DeviceInfo device;                         /**< information record of device */
+    tmf8828DriverInfo info;                           /**< information record of driver */
+    uint32_t hostTicks[ CLK_CORRECTION_PAIRS ];       // host ticks for clock correction
+    uint32_t tmf8828Ticks[ CLK_CORRECTION_PAIRS ];    // device ticks for clock correction
+    uint8_t clkCorrectionIdx;                         // index of the last inserted pair
+    uint8_t i2cSlaveAddress;                          // i2c slave address to talk to device
+    uint8_t clkCorrectionEnable;                      // default is clock correction on
+    uint8_t enablePin;                                // which pin to use for enable line
+    uint8_t interruptPin;                             // which pin to use for interrupt line
+    uint8_t logLevel;                                 // how chatty the program is
+} tmf8828Driver;
+
+
 // ---------------------------------------------- functions ---------------------------------------
 // Power and bootloader functions are available with ROM code.
 // ---------------------------------------------- functions ---------------------------------------
+
+// Function to print the results in a kind of CSV like format
+// driver ... pointer to the tmf8828 driver structure
+// data ... pointer to the result structure as defined for tmf882x
+// len ... number of bytes the pointer points to
+void print_results( tmf8828Driver * driver, uint8_t * data, uint8_t len, int *conf, int *dist, int *subcapture_nr );
+
+
+// Function to print a histogram part in a kind of CSV like format
+// driver ... pointer to the tmf8828 driver structure
+// data ... pointer to the histogram buffer as defined for tmf882x
+// len ... number of bytes the pointer points to
+void print_histogram( tmf8828Driver * driver, uint8_t * data, uint8_t len );
+
+// Correct the distance based on the clock correction pairs
+// driver ... pointer to an instance of the tmf8828 driver data structure
+uint16_t tmf8828CorrectDistance( tmf8828Driver * driver, uint16_t distance );
+
+
+int8_t tmf8828ReadDeviceInfo ( tmf8828Driver * driver );
 
 // Function to initialise the driver data structure, call this as the first function
 // of your program, before using any other function of this driver
@@ -241,6 +296,7 @@ int8_t tmf8828LoadConfigPageFactoryCalib( tmf8828Driver * driver );
 // dumpHistogram ... if 1 then dump raw histograms, if ==0 do not dump them, if 2 dump EC histograms, if 3 dump both
 // Function returns APP_SUCCESS_OK if successfully configure the device, else it returns an error APP_ERROR_*
 int8_t tmf8828Configure( tmf8828Driver * driver, uint16_t periodInMs, uint16_t kiloIterations, uint8_t dumpHistogram  );
+int8_t tmf8828ConfigureFull ( tmf8828Driver * driver, uint16_t periodInMs, uint16_t kiloIterations, uint8_t spadMapId, uint16_t lowThreshold, uint16_t highThreshold, uint8_t persistence, uint32_t intMask, uint8_t dumpHistogram  );
 
 // Function to execute an i2c address chagne
 // driver ... pointer to an instance of the tmf8828 driver data structure
@@ -301,6 +357,7 @@ void tmf8828DisableInterrupts( tmf8828Driver * driver, uint8_t mask );
 // driver ... pointer to an instance of the tmf8828 driver data structure
 // Function returns APP_SUCCESS_OK if there was a result page, else APP_ERROR_NO_RESULT_PAGE.
 int8_t tmf8828ReadResults( tmf8828Driver * driver, int *conf, int *dist, int *subcapture_nr );
+int8_t tmf8828ReadResultsFn ( tmf8828Driver * driver );
 
 // Function to read histograms and print them on UART. This function should only be calle dwhen there was a
 // raw histogram interrupt (use function tmf8828GetAndClrInterrupts to find this out).
