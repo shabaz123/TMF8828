@@ -15,6 +15,7 @@ The circuit shown below can be assembled onto a small board. It is designed to e
 
 Some components are labeled DNF (Do Not Fit), depending on if you intend to use the board with a Pi Pico or with a different board.
 <img width="100%" align="left" src="tmf8828-board-schematic-rev1-1.jpg">
+
 Note: The diagram shown is for revision 1.1. The only difference between rev 1.0 and rev 1.1 is that the later revision connects the TMF8828 EN pin to GPIO9 on the Pi Pico. In rev 1.0, that connection was missing.
 
 # PCB Layout
