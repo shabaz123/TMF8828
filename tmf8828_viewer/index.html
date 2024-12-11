@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+    <!-- WebUSB connected app that displays streamed data graphically in a 64x64 image -->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ToF Viewer</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body onload="Load()">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6">
+                <h1>ToF Viewer</h1>
+                <p>TMF8828 Time of Flight Live Image Viewer</p>
+                <button type='button' onclick="Comm();">Connect</button>
+                <button id="btnStart">Start</button>
+                <button id="btnStop">Stop</button>
+                <br>
+                <br>
+                <div id="border">
+                    <article id="article">
+                        <!-- canvas for first object will be created here by JS -->
+                    </article>
+                    <article id="article2">
+                        <!-- canvas for second object will be created here by JS -->
+                    </article>
+                </div>
+                <pre id='infoSpace'></pre>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+
+</body>
+</html>
