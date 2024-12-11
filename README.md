@@ -14,7 +14,8 @@ This repository contains a project (hardware and software) related to the TMF882
 The circuit shown below can be assembled onto a small board. It is designed to either interface with a Pi Pico board, or, alternatively, any other microcontroller with a 3.3V I2C interface. 
 
 Some components are labeled DNF (Do Not Fit), depending on if you intend to use the board with a Pi Pico or with a different board.
-<img width="100%" align="left" src="tmf8828-board-schematic-rev1.jpg">
+<img width="100%" align="left" src="tmf8828-board-schematic-rev1-1.jpg">
+Note: The diagram shown is for revision 1.1. The only difference between rev 1.0 and rev 1.1 is that the later revision connects the TMF8828 EN pin to GPIO9 on the Pi Pico. In rev 1.0, that connection was missing.
 
 # PCB Layout
 The KiCad files (requires KiCad V8.0 upward) are in the repo, as well as the generated Gerber files, ready for sending to a PCB factory. 
